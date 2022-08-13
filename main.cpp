@@ -146,40 +146,49 @@ int main () {
                 printEigen2D(eig_yd);
 
     // vecPoint2D
-			Eigen::Array<float,2,playGroundVerticesSize> 	eig_vecPoint2D;			
-			eig_vecPoint2D.row(0) = camIFs[i].matrixK[0] * eig_xd + camIFs[i].matrixK[1];
-			eig_vecPoint2D.row(1) = camIFs[i].matrixK[2] * eig_yd + camIFs[i].matrixK[3];
-			
-			//masking : if ((vecPoint2D[1] >= 0.0 && vecPoint2D[1] <= PLAYGROUND_TEXTURE_HEIGHT) && (vecPoint2D[0] >= 0.0 && vecPoint2D[0] <= PLAYGROUND_TEXTURE_WIDTH))
-			Eigen::MatrixXf					eig_mask_vecPoint2D;			
-			eig_mask_vecPoint2D = (((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH))).cast<float>();
-			
+            Eigen::Array<float,2,playGroundVerticesSize> 	eig_vecPoint2D;	
+			eig_vecPoint2D.row(0) = (camIFs[i].matrixK[0] * eig_xd * eig_mask_lenVec2D.array()) + camIFs[i].matrixK[1];
+			eig_vecPoint2D.row(1) = (camIFs[i].matrixK[2] * eig_yd * eig_mask_lenVec2D.array()) + camIFs[i].matrixK[3];
+
+            //masking : if ((vecPoint2D[1] >= 0.0 && vecPoint2D[1] <= PLAYGROUND_TEXTURE_HEIGHT) && (vecPoint2D[0] >= 0.0 && vecPoint2D[0] <= PLAYGROUND_TEXTURE_WIDTH))			
+            Eigen::MatrixXf					eig_mask_vecPoint2D, eig_maskNOT_vecPoint2D;
+			eig_mask_vecPoint2D     = (((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH))).cast<float>();
+			eig_maskNOT_vecPoint2D  = (!(((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH)))).cast<float>();
+
 			//masking : if (vecPointTransformed[2] > ImageOffset[i] + 0.1)
 			Eigen::MatrixXf					eig_mask_vecPointTransformed_0p1;				
 			eig_mask_vecPointTransformed_0p1	= (eig_vecPointTransformed.array().row(2) > (ImageOffset[i] + 0.1)).cast<float>();
-
                     printEigen2D(eig_vecPoint2D);
+                    cout << "eig_mask_vecPoint2D" << endl;
                     printEigen2D(eig_mask_vecPoint2D);
+                    cout << "eig_maskNOT_vecPoint2D" << endl;
+                    printEigen2D(eig_maskNOT_vecPoint2D);
+                    cout << "eig_mask_vecPointTransformed_0p1" << endl;
                     printEigen2D(eig_mask_vecPointTransformed_0p1);
 
         //UVA
-			Eigen::Matrix<float,playGroundVerticesSize, 3>	eig_UVA;
-					//Eigen::MatrixXf					eig_UVA_default(3,1);
-					//eig_UVA_default << -1.0,
-					//					 -1.0,
-					//					  0.0;
-					//eig_UVA 						= eig_UVA_default.replicate(1, playGroundVerticesSize);
+			Eigen::Array<float,playGroundVerticesSize, 3, Eigen::RowMajor>	eig_UVA;
+            Eigen::ArrayXf					eig_UVA_default(3,1);
+            // eig_UVA_default <<  -1.0,
+            //                     -1.0,
+            //                      0.0;       //eig_UVA = eig_UVA_default.replicate(1, playGroundVerticesSize);
 			
-			eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH).matrix();
-			eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT).matrix();
-			eig_UVA.col(2) 					= (eig_mask_vecPointTransformed_0p1.row(0).array() + 1.0).matrix();
+			eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D.array() + (-1.0*eig_maskNOT_vecPoint2D.array());
+			eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D.array() + (-1.0*eig_maskNOT_vecPoint2D.array());
+			eig_UVA.col(2) 					= (eig_mask_vecPointTransformed_0p1.row(0).array() + 1.0)*eig_mask_vecPoint2D.array();
 			
             printEigen2D(eig_UVA);
 
-		for (int j = 0; j < playGroundVerticesSize; j++ ){
-            std::vector<float> v3 (&eig_UVA.row(j)[0], eig_UVA.row(j).data() + eig_UVA.row(j).cols()*eig_UVA.row(j).rows());
-			uvaOuts.push_back(v3);
+		for (int j = 0; j < playGroundVerticesSize; ++j ){
+            // std::vector<float> v3 (eig_UVA.row(j).data(),  eig_UVA.row(j).data() + eig_UVA.row(j).size() );
+            std::vector<float> v3 (&eig_UVA.row(j)(0), &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows());
+            // std::vector<float> v3 = {eig_UVA.row(j)(0), eig_UVA.row(j)(1), eig_UVA.row(j)(2)};
+            uvaOuts.push_back(v3);
 		}
+
+        int j = 0;
+        cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " <<  &eig_UVA.row(j)(1) <<  " mem adr " << &eig_UVA.row(j)(2) << endl;
+        cout << "mem adr " << &eig_UVA.row(j)(0) <<  " mem adr " << &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows() << endl;
 
         // check uvaOuts
         cout << "uvaOuts" << endl;
