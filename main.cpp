@@ -9,7 +9,7 @@ using namespace std;
 using Eigen::MatrixXf;
 using Eigen::VectorXf;
 
-MatrixXf    Conv_Vertices2Eigen(const vector<glm::vec3> &);
+MatrixXf    Conv_Vertices2Eigen(const vector<glm::vec3> &vertices);
 MatrixXf    Conv_Vector9x1fEigen3x3f(const vector<float> &vector9f);
 MatrixXf    Conv_Vector1DEigenVec(const vector<float> &vector1D);
 void        printEigen2D(const Eigen::MatrixXf &eigenMat);
@@ -46,7 +46,7 @@ int main () {
 
     //---------------------------------------------
 
-    //** playGroundVertices[j]
+    //** playGroundVertices[i]
 
     Eigen::MatrixXf 				eig_playGroundVertices;
     Eigen::Matrix3f 				eig_matrixR;
@@ -139,7 +139,7 @@ int main () {
 			eig_maskNOT_vecPoint2D  = (!(((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH)))).cast<float>();
 
 			//masking : if (vecPointTransformed[2] > ImageOffset[i] + 0.1)
-			Eigen::MatrixXf					eig_mask_vecPointTransformed_0p1;				
+			Eigen::Array<float, 1, playGroundVerticesSize>	eig_mask_vecPointTransformed_0p1;				
 			eig_mask_vecPointTransformed_0p1	= (eig_vecPointTransformed.array().row(2) > (ImageOffset[i] + 0.1)).cast<float>();
                     printEigen2D(eig_vecPoint2D);
                     cout << "eig_mask_vecPoint2D" << endl;
@@ -150,18 +150,37 @@ int main () {
                     printEigen2D(eig_mask_vecPointTransformed_0p1);
 
         //UVA
-			Eigen::Array<float,playGroundVerticesSize, 3, Eigen::RowMajor>	eig_UVA;
-			eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
-			eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
-			eig_UVA.col(2) 					= (eig_mask_vecPointTransformed_0p1.row(0).array() + 1.0)*eig_mask_vecPoint2D.array();
+            // transposed to size x 3 matrice as vertices 
+			// Eigen::Array<float,playGroundVerticesSize, 3, Eigen::RowMajor>	eig_UVA;
+			// eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
+			// eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
+			// eig_UVA.col(2) 					= (eig_mask_vecPointTransformed_0p1.row(0) + 1.0)*eig_mask_vecPoint2D;
 			
+            // eig_UVA.col(0) 					= eig_UVA.col(0)*eig_mask_vecPointTransformed.row(0) + (-1.0*eig_maskNOT_vecPointTransformed.row(0));
+            // eig_UVA.col(1) 					= eig_UVA.col(1)*eig_mask_vecPointTransformed.row(0) + (-1.0*eig_maskNOT_vecPointTransformed.row(0));
+            // eig_UVA.col(2) 					= eig_UVA.col(2)*eig_mask_vecPointTransformed.row(0);
+            // printEigen2D(eig_UVA);
+
+            // keep to 3xsize matrice
+			Eigen::Array<float, 3, playGroundVerticesSize, Eigen::RowMajor>	eig_UVA;
+			eig_UVA.row(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
+			eig_UVA.row(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
+			eig_UVA.row(2) 					= (eig_mask_vecPointTransformed_0p1.row(0) + 1.0)*eig_mask_vecPoint2D;
+			
+            eig_UVA.row(0) 					= eig_UVA.row(0)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
+            eig_UVA.row(1) 					= eig_UVA.row(1)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
+            eig_UVA.row(2) 					= eig_UVA.row(2)*eig_mask_vecPointTransformed;
             printEigen2D(eig_UVA);
 
         // push_back to uvaOuts
             //for-loop
+            // for (int k = 0; k < playGroundVerticesSize; ++k ){
+            //     uvaOuts.push_back(glm::vec3(eig_UVA(k, 0), eig_UVA(k, 1), eig_UVA(k, 2)));
+            // }
+
             for (int k = 0; k < playGroundVerticesSize; ++k ){
-                uvaOuts.push_back(glm::vec3(eig_UVA(k, 0), eig_UVA(k, 1), eig_UVA(k, 2)));
-            }
+                uvaOuts.push_back(glm::vec3(eig_UVA(0, k), eig_UVA(1, k), eig_UVA(2, k)));
+            }            
             //at once
             // https://forums.codeguru.com/showthread.php?519570-Add-multiple-values-to-a-vector
             // https://stackoverflow.com/questions/10516495/calling-a-function-on-every-element-of-a-c-vector
