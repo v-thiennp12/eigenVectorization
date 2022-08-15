@@ -33,18 +33,20 @@ int main () {
                                     glm::vec3(9,10,11)
                                 };
     int i   =   0;
-
     vector<camIFs_strct> camIFs;
     camIFs.push_back(camIFs_strct());
     camIFs.push_back(camIFs_strct());
-    vector<float> ImageOffset   = {0.1, 0.2};
+    vector<float> ImageOffset       = {0.1, 0.2};
     float PLAYGROUND_TEXTURE_HEIGHT = 5;
     float PLAYGROUND_TEXTURE_WIDTH  = 2.5;
     float RAW_IMG_HEIGHT            = 600;
     float RAW_IMG_WIDTH             = 800;
     
-    //---------------------------------------------
     vector<glm::vec3> uvaOuts;
+
+    //---------------------------------------------
+
+    //** playGroundVertices[j]
 
     Eigen::MatrixXf 				eig_playGroundVertices;
     Eigen::Matrix3f 				eig_matrixR;
@@ -54,8 +56,9 @@ int main () {
 		eig_vectT 					= Conv_Vector1DEigenVec(camIFs[i].vectT).replicate(1, playGroundVerticesSize);
         eig_playGroundVertices      = Conv_Vertices2Eigen(playGroundVertices);
             printEigen2D(eig_matrixR);
+            cout << "vect_T" << endl;
             printEigen2D(eig_vectT);
-            // printEigen2D(eig_playGroundVertices);
+            printEigen2D(eig_playGroundVertices);
     
     //vecPointTransformed
     Eigen::Matrix<float,3,playGroundVerticesSize,Eigen::RowMajor>  	eig_vecWorldPosRotate;
@@ -69,28 +72,27 @@ int main () {
             printEigen2D(eig_vecPointTransformed);
     
     //lenVec2D, lenVec3D
-    Eigen::Array<float, 1, playGroundVerticesSize> 					eig_array_lenVec2D, eig_array_lenVec3D;
-    Eigen::Array<float, 3, playGroundVerticesSize> 					eig_array_vecPointTransformed_p2;			
-			eig_array_vecPointTransformed_p2		= eig_vecPointTransformed.array().square(); // or .pow(2);			
+    Eigen::Array<float, 1, playGroundVerticesSize> 					eig_lenVec2D, eig_lenVec3D;
+    Eigen::Array<float, 3, playGroundVerticesSize> 					eig_vecPointTransformed_p2;			
+			eig_vecPointTransformed_p2          = eig_vecPointTransformed.array().square(); // or .pow(2);			
 					                                // Block of size (p,q), starting at (i,j)	: matrix.block(i,j,p,q);			
-			eig_array_lenVec2D 						= eig_array_vecPointTransformed_p2.topRows(2).colwise().sum().sqrt();
-			eig_array_lenVec3D 						= eig_array_vecPointTransformed_p2.topRows(3).colwise().sum().sqrt();
+			eig_lenVec2D 						= eig_vecPointTransformed_p2.topRows(2).colwise().sum().sqrt();
+			eig_lenVec3D 						= eig_vecPointTransformed_p2.topRows(3).colwise().sum().sqrt();
 			
-    Eigen::Matrix<float,1,playGroundVerticesSize> 	eig_lenVec2D, eig_lenVec3D;
-			eig_lenVec2D 							= eig_array_lenVec2D.matrix();
-			eig_lenVec3D 							= eig_array_lenVec3D.matrix();
-            printEigen2D(eig_lenVec2D);
-            printEigen2D(eig_lenVec3D);
-
     // //xd, yd
 			//masking : if (vecPointTransformed[2] > ImageOffset[i])
 			//masking : if (lenVec2D > 1e-6f)
-			Eigen::MatrixXf					eig_mask_vecPointTransformed;
-			Eigen::MatrixXf					eig_mask_lenVec2D;
+			Eigen::Array<float, 1, playGroundVerticesSize>			eig_mask_vecPointTransformed;
+			Eigen::Array<float, 1, playGroundVerticesSize>			eig_maskNOT_vecPointTransformed;
+			Eigen::Array<float, 1, playGroundVerticesSize>			eig_mask_lenVec2D;
 				
 			eig_mask_vecPointTransformed	= (eig_vecPointTransformed.array().row(2) > ImageOffset[i]).cast<float>();
-			eig_mask_lenVec2D				= (eig_lenVec2D.array() > 1e-6f).cast<float>();
+			eig_maskNOT_vecPointTransformed	= (!(eig_vecPointTransformed.array().row(2) > ImageOffset[i])).cast<float>();
+			eig_mask_lenVec2D				= (eig_lenVec2D > 1e-6f).cast<float>();
+                cout << "eig_mask_vecPointTransformed" << endl;
                 printEigen2D(eig_mask_vecPointTransformed);
+                cout << "eig_maskNOT_vecPointTransformed" << endl;
+                printEigen2D(eig_maskNOT_vecPointTransformed);
                 printEigen2D(eig_mask_lenVec2D);		
 			//
 			Eigen::Array<float,1,playGroundVerticesSize> 	eig_ratio;
@@ -99,7 +101,7 @@ int main () {
 			Eigen::Array<float,1,playGroundVerticesSize> 	eig_xd, eig_yd;
 			
 			//eig_ratio = (eig_lenVec2D.array() / eig_lenVec3D.array()).matrix();
-			eig_ratio 		= eig_lenVec2D.array()*eig_lenVec3D.cwiseInverse().array();
+			eig_ratio 		= eig_lenVec2D*eig_lenVec3D.inverse();
 			eig_theta 		= eig_ratio.asin();
 			eig_theta_p2 	= eig_theta.square();
 			eig_theta_p4 	= eig_theta_p2.square();
@@ -119,19 +121,20 @@ int main () {
                 printEigen2D(eig_theta_p8);
                 printEigen2D(eig_cdist);
 	
-			eig_xd = (eig_vecPointTransformed.row(0).array()*eig_lenVec2D.cwiseInverse().array())*eig_cdist;
-			eig_yd = (eig_vecPointTransformed.row(1).array()*eig_lenVec2D.cwiseInverse().array())*eig_cdist;
+			eig_xd = (eig_vecPointTransformed.row(0).array()*eig_lenVec2D.inverse())*eig_cdist;
+			eig_yd = (eig_vecPointTransformed.row(1).array()*eig_lenVec2D.inverse())*eig_cdist;
 
                 printEigen2D(eig_xd);
                 printEigen2D(eig_yd);
 
     // vecPoint2D
             Eigen::Array<float,2,playGroundVerticesSize> 	eig_vecPoint2D;	
-			eig_vecPoint2D.row(0) = (camIFs[i].matrixK[0] * eig_xd * eig_mask_lenVec2D.array()) + camIFs[i].matrixK[1];
-			eig_vecPoint2D.row(1) = (camIFs[i].matrixK[2] * eig_yd * eig_mask_lenVec2D.array()) + camIFs[i].matrixK[3];
+			eig_vecPoint2D.row(0) = (camIFs[i].matrixK[0] * eig_xd * eig_mask_lenVec2D) + camIFs[i].matrixK[1];
+			eig_vecPoint2D.row(1) = (camIFs[i].matrixK[2] * eig_yd * eig_mask_lenVec2D) + camIFs[i].matrixK[3];
 
             //masking : if ((vecPoint2D[1] >= 0.0 && vecPoint2D[1] <= PLAYGROUND_TEXTURE_HEIGHT) && (vecPoint2D[0] >= 0.0 && vecPoint2D[0] <= PLAYGROUND_TEXTURE_WIDTH))			
-            Eigen::MatrixXf					eig_mask_vecPoint2D, eig_maskNOT_vecPoint2D;
+            Eigen::Array<float, 1, playGroundVerticesSize>  eig_mask_vecPoint2D;
+            Eigen::Array<float, 1, playGroundVerticesSize>  eig_maskNOT_vecPoint2D;
 			eig_mask_vecPoint2D     = (((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH))).cast<float>();
 			eig_maskNOT_vecPoint2D  = (!(((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH)))).cast<float>();
 
@@ -148,23 +151,28 @@ int main () {
 
         //UVA
 			Eigen::Array<float,playGroundVerticesSize, 3, Eigen::RowMajor>	eig_UVA;
-            Eigen::ArrayXf					eig_UVA_default(3,1);
-            // eig_UVA_default <<  -1.0,
-            //                     -1.0,
-            //                      0.0;       //eig_UVA = eig_UVA_default.replicate(1, playGroundVerticesSize);
-			
-			eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D.array() + (-1.0*eig_maskNOT_vecPoint2D.array());
-			eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D.array() + (-1.0*eig_maskNOT_vecPoint2D.array());
+			eig_UVA.col(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
+			eig_UVA.col(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
 			eig_UVA.col(2) 					= (eig_mask_vecPointTransformed_0p1.row(0).array() + 1.0)*eig_mask_vecPoint2D.array();
 			
             printEigen2D(eig_UVA);
 
-		for (int k = 0; k < playGroundVerticesSize; ++k ){
-            uvaOuts.push_back(glm::vec3(eig_UVA(0, k), eig_UVA(1, k), eig_UVA(2, k)));
-		}
+        // push_back to uvaOuts
+            //for-loop
+            for (int k = 0; k < playGroundVerticesSize; ++k ){
+                uvaOuts.push_back(glm::vec3(eig_UVA(k, 0), eig_UVA(k, 1), eig_UVA(k, 2)));
+            }
+            //at once
+            // https://forums.codeguru.com/showthread.php?519570-Add-multiple-values-to-a-vector
+            // https://stackoverflow.com/questions/10516495/calling-a-function-on-every-element-of-a-c-vector
+            // uvaOuts()
+            // array<int, 5> tmp = {4, 57, 5786, 578, 8841}; 
+            // vector<int> vec(tmp.begin(), tmp.end());
+
 
         int j = 0;
-        cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " << &eig_UVA.row(j)(1) <<  " mem adr " << &eig_UVA.row(j)(2) << " mem adr " << &eig_UVA.row(j)(3) << endl;
+        cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " << &eig_UVA.row(j)(1) <<  " mem adr " << &eig_UVA.row(j)(2) << endl;
+        cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " << &eig_UVA.row(j)(0) + 1 <<  " mem adr " << &eig_UVA.row(j)(0) + 2 << " mem adr " << &eig_UVA.row(j)(0) + 3 << endl;
         cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " << &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows() << endl;
 
         // check uvaOuts
