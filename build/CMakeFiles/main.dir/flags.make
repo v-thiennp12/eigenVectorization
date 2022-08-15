@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/include/eigen3 -I/home/nguye/eigenVectorization/includes/glm/glm
+CXX_INCLUDES = -I/usr/local/include/eigen3 -I/home/nguyenrobot/eigenVectorization/includes/glm/glm
 
 CXX_FLAGS = -std=c++11 -O3 -g
 
