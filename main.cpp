@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
+#include <glm.hpp>
 
 using namespace std;
 using Eigen::MatrixXf;
@@ -12,6 +13,7 @@ MatrixXf    ConvTrans_Vector2DEigen(const vector<vector<float>> &vector2D);
 MatrixXf    Conv_Vector2DEigen(const vector<vector<float>> &vector2D);
 MatrixXf    Conv_Vector9fEigen3f(const vector<float> &vector9f);
 MatrixXf    Conv_Vector1DEigenVec(const vector<float> &vector1D);
+MatrixXf    ConvTrans_Vertices2Eigen(const vector<glm::vec3> &vertices);
 void        printEigen2D(const Eigen::MatrixXf &eigenMat);
 
 struct camIFs_strct {
@@ -43,6 +45,31 @@ int main () {
     //     eigen3f = Conv_Vector9fEigen3f(vector9f);
     //             // printEigen2D(eigen3f);
 
+
+    // test glm vs vector
+    vector<vector<float>>       vectorVertices{
+                                        {1,2,3},
+                                        {3,4,5},
+                                        {5,6,7},
+                                        {7,8,9},
+                                        {9,10,11}
+                                     };
+    vector<glm::vec3>       glmVertices{
+                                        glm::vec3(0.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, 0.0f),
+                                        glm::vec3(0.0f, 0.0f, 9.0f),
+                                     };
+
+    Eigen::MatrixXf 				eig_vectorVertices;
+    Eigen::MatrixXf 				eig_glmVertices;
+
+        eig_vectorVertices 		= ConvTrans_Vector2DEigen(vectorVertices);
+        eig_glmVertices 		= ConvTrans_Vertices2Eigen(glmVertices);
+        printEigen2D(eig_vectorVertices);
+        printEigen2D(eig_glmVertices);
+
     //------------------------
     const int playGroundVerticesSize  = 5;
     vector<vector<float>>       playGroundVertices{
@@ -63,7 +90,8 @@ int main () {
     float RAW_IMG_HEIGHT            = 600;
     float RAW_IMG_WIDTH             = 800;
     
-    vector<vector<float>> uvaOuts;
+    // vector<vector<float>> uvaOuts;
+    vector<glm::vec3> uvaOuts;
     // Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
 
     Eigen::MatrixXf 				eig_playGroundVertices;
@@ -180,24 +208,35 @@ int main () {
             printEigen2D(eig_UVA);
 
 		for (int j = 0; j < playGroundVerticesSize; ++j ){
-            // std::vector<float> v3 (eig_UVA.row(j).data(),  eig_UVA.row(j).data() + eig_UVA.row(j).size() );
-            std::vector<float> v3 (&eig_UVA.row(j)(0), &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows());
             // std::vector<float> v3 = {eig_UVA.row(j)(0), eig_UVA.row(j)(1), eig_UVA.row(j)(2)};
-            uvaOuts.push_back(v3);
+            // std::vector<float> v3 (eig_UVA.row(j).data(),  eig_UVA.row(j).data() + eig_UVA.row(j).size() );
+            // std::vector<float> v3 (&eig_UVA.row(j)(0), &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows()); // work only with Eigen::RowMajor>	eig_UVA;
+
+            // std::vector<float> v3 (&eig_UVA.row(j)(0), &eig_UVA.row(j)(0) + 3); // work only with Eigen::RowMajor>	eig_UVA;
+            // uvaOuts.push_back(v3);
+
+            uvaOuts.push_back(glm::vec3(eig_UVA.row(j)(0), eig_UVA.row(j)(1), eig_UVA.row(j)(2)));
 		}
 
-        int j = 0;
-        cout << "mem adr " << &eig_UVA.row(j)(0) << " mem adr " <<  &eig_UVA.row(j)(1) <<  " mem adr " << &eig_UVA.row(j)(2) << endl;
-        cout << "mem adr " << &eig_UVA.row(j)(0) <<  " mem adr " << &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows() << endl;
+            int j = 0;
+            cout << "mem adr " << &eig_UVA.row(j)(0) <<  " mem adr " << &eig_UVA.row(j)(1)      << " mem adr " << &eig_UVA.row(j)(2) << endl;
+            cout << "mem adr " << &eig_UVA.row(j)(0) <<  " mem adr " << &eig_UVA.row(j)(0) + 1  << " mem adr " << &eig_UVA.row(j)(0) + 2 << endl;
+            cout << "mem adr " << &eig_UVA.row(j)(0) <<  " mem adr " << &eig_UVA.row(j)(0) + eig_UVA.row(j).cols()*eig_UVA.row(j).rows() << endl;
 
         // check uvaOuts
         cout << "uvaOuts" << endl;
 		for (int j = 0; j < uvaOuts.size(); j++ ){
-            for (int k = 0; k < uvaOuts[j].size(); k++ ){
+            for (int k = 0; k < 3; k++ ){
                 cout << uvaOuts[j][k] << " ";
             }
             cout << endl;
 		}
+		// for (int j = 0; j < uvaOuts.size(); j++ ){
+        //     for (int k = 0; k < uvaOuts[j].size(); k++ ){
+        //         cout << uvaOuts[j][k] << " ";
+        //     }
+        //     cout << endl;
+		// }           
 
     return 0;
 };
@@ -211,6 +250,21 @@ void printEigen2D(const Eigen::MatrixXf &eigen2D) {
         }
         cout << endl;
     }
+}
+
+MatrixXf ConvTrans_Vertices2Eigen(const vector<glm::vec3> &vertices) {
+    // vector2D[i][j] >> eigen2D(j, i)
+        // convert and transpose in the same time
+
+    MatrixXf eigen2D = Eigen::MatrixXf::Constant(3, vertices.size(), 0.0f);
+
+    for (int i{0}; i < vertices.size(); ++i) {
+        eigen2D(0,i) = vertices[i][0];
+        eigen2D(1,i) = vertices[i][1];
+        eigen2D(2,i) = vertices[i][2];
+    }
+    
+    return eigen2D;
 }
 
 MatrixXf ConvTrans_Vector2DEigen(const vector<vector<float>> &vector2D) {
