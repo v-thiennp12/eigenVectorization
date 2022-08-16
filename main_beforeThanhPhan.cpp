@@ -14,6 +14,8 @@ MatrixXf    Conv_Vector9x1fEigen3x3f(const vector<float> &vector9f);
 MatrixXf    Conv_Vector1DEigenVec(const vector<float> &vector1D);
 void        printEigen2D(const Eigen::MatrixXf &eigenMat);
 
+// before thanhPhan integration
+
 //history : redo the GLM processing
 struct camIFs_strct {
     vector<float> matrixD       = {1,2,3,4};
@@ -165,7 +167,9 @@ int main () {
 			Eigen::Array<float, 3, playGroundVerticesSize, Eigen::RowMajor>	eig_UVA;
 			eig_UVA.row(0) 					= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
 			eig_UVA.row(1) 					= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
-			eig_UVA.row(2) 					= (eig_mask_vecPointTransformed_0p1.row(0) + 1.0)*eig_mask_vecPoint2D;
+			
+            // BUG : (eig_mask_vecPointTransformed_0p1.row(0)"*"1.0), not + 1.0
+            eig_UVA.row(2) 					= (eig_mask_vecPointTransformed_0p1.row(0) + 1.0)*eig_mask_vecPoint2D;
 			
             eig_UVA.row(0) 					= eig_UVA.row(0)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
             eig_UVA.row(1) 					= eig_UVA.row(1)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
