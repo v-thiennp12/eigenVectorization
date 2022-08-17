@@ -568,8 +568,14 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
   ../includes/glm/glm/detail/type_half.hpp \
   ../includes/glm/glm/detail/type_half.inl \
   ../includes/glm/glm/integer.hpp \
-  ../includes/glm/glm/detail/func_integer.inl
+  ../includes/glm/glm/detail/func_integer.inl \
+  /usr/include/c++/7/chrono \
+  /usr/include/c++/7/ratio \
+  /usr/include/c++/7/ctime \
+  /usr/include/c++/7/bits/parse_numbers.h
 
+
+/usr/include/c++/7/ctime:
 
 ../includes/glm/glm/detail/type_half.inl:
 
@@ -696,6 +702,8 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
 ../includes/glm/glm/ext/scalar_int_sized.hpp:
 
 ../includes/glm/glm/ext/vector_int2_sized.hpp:
+
+/usr/include/c++/7/bits/parse_numbers.h:
 
 ../includes/glm/glm/ext/vector_int2.hpp:
 
@@ -844,6 +852,8 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/7/cstdio:
 
 /usr/include/c++/7/ext/string_conversions.h:
+
+/usr/include/c++/7/chrono:
 
 ../includes/glm/glm/exponential.hpp:
 
@@ -1376,6 +1386,8 @@ CMakeFiles/main.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/7/bits/istream.tcc:
 
 /usr/include/asm-generic/errno.h:
+
+/usr/include/c++/7/ratio:
 
 /usr/include/asm-generic/errno-base.h:
 

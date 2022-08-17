@@ -1,0 +1,11 @@
+vectorization optimized
+
+
+vectorization non-optimized
+
+
+for-loop iteration
+
+
+elapsed time vetorization : 551100 nanoseconds
+elapsed time for-loop : 2700 nanoseconds

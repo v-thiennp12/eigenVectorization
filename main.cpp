@@ -7,9 +7,15 @@
 #include "Eigen/Dense"
 #include <vector>
 #include <iostream>
-#include "glm.hpp" // glm::vec3
+#include "glm.hpp"      // for vertices glm::vec3
+#include <chrono>       // for timer
+#include <ctime>        // for random by time
+#include <stdlib.h>     // for random by time
+#include <cmath>        // for abs()
 
 // integrated by ThanhPhan and debugged
+// 17 aug 2022
+// optimized eig_vectT
 
 using namespace std;
 using Eigen::MatrixXf;
@@ -30,7 +36,8 @@ struct camIFs_strct {
 
 int main () {
     //---------------------------------------------
-    const int playGroundVerticesSize  = 5;
+    const int addedVerticesSize       = 10000;
+    const int playGroundVerticesSize  = 5 + addedVerticesSize;
     vector<glm::vec3>       playGroundVertices{
                                     glm::vec3(100,200,300),
                                     glm::vec3(30,4,5),
@@ -38,6 +45,23 @@ int main () {
                                     glm::vec3(-7,8,-9),
                                     glm::vec3(90,10,110)
                                 };
+
+        // add random point into vertices
+        int min = -10;
+        int max = 10;
+        float randX, randY, randZ;
+        for (int count{0}; count < addedVerticesSize; ++count) {
+            // int r = minN + rand() % (maxN + 1 - minN)
+            srand(time(NULL));
+            randX = (float) min + rand() % (max + 1 - min);
+            srand(time(NULL));
+            randY = (float) min + rand() % (max + 1 - min);
+            srand(time(NULL));
+            randZ = (float) min + rand() % (max + 1 - min);
+
+            playGroundVertices.push_back(glm::vec3(randX,randY,randZ));
+        }
+
     int i   =   0;
     vector<camIFs_strct> camIFs;
     camIFs.push_back(camIFs_strct());
@@ -52,12 +76,16 @@ int main () {
     vector<glm::vec3> uvaOuts_forLoop;
 
     //---------------------------------------------
+    auto start_timer        = std::chrono::high_resolution_clock::now();
+    auto stop_timer         = std::chrono::high_resolution_clock::now();
+    auto duration_time      = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer); // std::chrono::duration<float>
 
+    start_timer             = std::chrono::high_resolution_clock::now();
     //** playGroundVertices[i]
     //** playGroundVertices iteration----------------vectorization---------------------------
 	 	Eigen::MatrixXf 				eig_playGroundVertices;
 	 	Eigen::Matrix3f 				eig_matrixR;
-	 	Eigen::MatrixXf					eig_vectT;    
+	 	Eigen::MatrixXf					eig_vectT;
 
 		eig_matrixR 				= Conv_Vector9x1fEigen3x3f(camIFs[i].matrixR);
 		eig_vectT 					= Conv_Vector1DEigenVec(camIFs[i].vectT).replicate(1, playGroundVerticesSize);
@@ -136,8 +164,8 @@ int main () {
         eig_xd = (eig_vecPointTransformed.row(0).array()*eig_lenVec2D.inverse())*eig_cdist;
         eig_yd = (eig_vecPointTransformed.row(1).array()*eig_lenVec2D.inverse())*eig_cdist;
 
-            printEigen2D(eig_xd);
-            printEigen2D(eig_yd);
+            // printEigen2D(eig_xd);
+            // printEigen2D(eig_yd);
 
 		// vecPoint2D
                 Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic>			eig_vecPoint2D;
@@ -160,11 +188,11 @@ int main () {
 				eig_mask_vecPointTransformed_0p1 = Eigen::MatrixXf::Constant(2, playGroundVerticesSize, 0.0).array();
 				eig_mask_vecPointTransformed_0p1 = (eig_vecPointTransformed.array().row(2) > (ImageOffset[i] + 0.1)).cast<float>();
 
-                printEigen2D(eig_vecPoint2D.matrix());
-                printEigen2D(eig_mask_vecPoint2D.matrix());
-                printEigen2D(eig_maskNOT_vecPoint2D.matrix());
-                cout << "eig_mask_vecPointTransformed_0p1" << endl;
-                printEigen2D(eig_mask_vecPointTransformed_0p1.matrix());
+                // printEigen2D(eig_vecPoint2D.matrix());
+                // printEigen2D(eig_mask_vecPoint2D.matrix());
+                // printEigen2D(eig_maskNOT_vecPoint2D.matrix());
+                // cout << "eig_mask_vecPointTransformed_0p1" << endl;
+                // printEigen2D(eig_mask_vecPointTransformed_0p1.matrix());
 
 			//UVA
 				// keep to 3xsize matrice
@@ -176,14 +204,14 @@ int main () {
 				eig_UVA.row(1) 	= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
 				eig_UVA.row(2) 	= (eig_mask_vecPointTransformed_0p1.row(0)*1.0)*eig_mask_vecPoint2D;
 				
-                cout << "eig_UVA" << endl;
-                printEigen2D(eig_UVA.matrix());
+                // cout << "eig_UVA" << endl;
+                // printEigen2D(eig_UVA.matrix());
 
 				eig_UVA.row(0) 	= eig_UVA.row(0)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
 				eig_UVA.row(1) 	= eig_UVA.row(1)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
 				eig_UVA.row(2) 	= eig_UVA.row(2)*eig_mask_vecPointTransformed;
 
-                printEigen2D(eig_UVA.matrix());
+                // printEigen2D(eig_UVA.matrix());
 
 			// push_back to uvaOuts
 				for (int k = 0; k < playGroundVerticesSize; ++k ){
@@ -193,6 +221,11 @@ int main () {
 		//** playGroundVertices iteration----------------vectorization---------------------------
 		//-----------vectorization ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+    stop_timer 	        = std::chrono::high_resolution_clock::now();
+    duration_time 	    = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer);
+    std::cout << "elapsed time vetorization : " << duration_time.count() << " nanoseconds" << std::endl;
+
+    start_timer         = std::chrono::high_resolution_clock::now();
         //------------------------------------ for-loop
 
         for (int j = 0; j < playGroundVerticesSize; j++ ){
@@ -253,23 +286,49 @@ int main () {
 
         //------------------------------------ for-loop ^^^^^^^^^^^^^^^^^^^^^^^
 
+    stop_timer 	        = std::chrono::high_resolution_clock::now();
+    duration_time 	    = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer);
+    std::cout << "elapsed time for-loop : " << duration_time.count() << " nanoseconds" << std::endl;
 
         // check uvaOuts
-        cout << "uvaOuts" << endl;
+        // cout << "uvaOuts" << endl;
+		// for (int j = 0; j < uvaOuts.size(); j++ ){
+        //     for (int k = 0; k < 3; k++ ){
+        //         cout << uvaOuts[j][k] << " ";
+        //     }
+        //     cout << endl;
+		// }
+
+        // cout << "uvaOuts_forLoop" << endl;
+		// for (int j = 0; j < uvaOuts_forLoop.size(); j++ ){
+        //     for (int k = 0; k < 3; k++ ){
+        //         cout << uvaOuts_forLoop[j][k] << " ";
+        //     }
+        //     cout << endl;
+		// }
+
+        cout << "uvaOuts - uvaOuts_forLoop" << endl;
+        bool    different   = false;
+        int     difCount    = 0;
 		for (int j = 0; j < uvaOuts.size(); j++ ){
             for (int k = 0; k < 3; k++ ){
-                cout << uvaOuts[j][k] << " ";
+                if (abs(uvaOuts[j][k] - uvaOuts_forLoop[j][k]) > 1e-9f) {
+                    different = true;
+                }
+                
             }
-            cout << endl;
-		}
 
-        cout << "uvaOuts_forLoop" << endl;
-		for (int j = 0; j < uvaOuts_forLoop.size(); j++ ){
-            for (int k = 0; k < 3; k++ ){
-                cout << uvaOuts_forLoop[j][k] << " ";
+            if (different) {
+                cout << "aie aie aie aie aie aie aie aie aie aie aie aie";
+                cout << "j " << j << endl;
+                cout << "uvaOuts         " << uvaOuts[j][0] << " " << uvaOuts[j][1] << " " <<uvaOuts[j][2] << " " <<endl;
+                cout << "uvaOuts_forLoop " << uvaOuts_forLoop[j][0] << " " << uvaOuts_forLoop[j][1] << " " << uvaOuts_forLoop[j][2] << " " << endl;
             }
-            cout << endl;
-		}
+
+            different = false;
+            // cout << endl;
+		}        
+
 
 
     return 0;
