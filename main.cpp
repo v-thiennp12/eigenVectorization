@@ -36,7 +36,7 @@ struct camIFs_strct {
 
 int main () {
     //---------------------------------------------
-    const int addedVerticesSize       = 10000;
+    const int addedVerticesSize       = 1000000;
     const int playGroundVerticesSize  = 5 + addedVerticesSize;
     vector<glm::vec3>       playGroundVertices{
                                     glm::vec3(100,200,300),
@@ -47,19 +47,22 @@ int main () {
                                 };
 
         // add random point into vertices
-        int min = -10;
-        int max = 10;
+        float min = -10;
+        float max = 10;
         float randX, randY, randZ;
+        //
         for (int count{0}; count < addedVerticesSize; ++count) {
             // int r = minN + rand() % (maxN + 1 - minN)
-            srand(time(NULL));
-            randX = (float) min + rand() % (max + 1 - min);
-            srand(time(NULL));
-            randY = (float) min + rand() % (max + 1 - min);
-            srand(time(NULL));
-            randZ = (float) min + rand() % (max + 1 - min);
+            // srand((int)time(0)); !not worked
+            randX =  min + rand()/(float)RAND_MAX*(max - min);
+            // srand(time(NULL)); !not worked
+            randY =  min + rand()/(float)RAND_MAX*(max - min);
+            // srand(time(NULL)); !not worked
+            randZ =  min + rand()/(float)RAND_MAX*(max - min);
 
-            playGroundVertices.push_back(glm::vec3(randX,randY,randZ));
+            // cout << randX << " " << randY << " " << randZ << endl;
+
+            playGroundVertices.push_back(glm::vec3(randX,randY,randZ));            
         }
 
     int i   =   0;
@@ -78,7 +81,7 @@ int main () {
     //---------------------------------------------
     auto start_timer        = std::chrono::high_resolution_clock::now();
     auto stop_timer         = std::chrono::high_resolution_clock::now();
-    auto duration_time      = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer); // std::chrono::duration<float>
+    auto duration_time      = std::chrono::duration_cast<std::chrono::milliseconds>(stop_timer - start_timer); // std::chrono::duration<float>
 
     start_timer             = std::chrono::high_resolution_clock::now();
     //** playGroundVertices[i]
@@ -222,8 +225,8 @@ int main () {
 		//-----------vectorization ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     stop_timer 	        = std::chrono::high_resolution_clock::now();
-    duration_time 	    = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer);
-    std::cout << "elapsed time vetorization : " << duration_time.count() << " nanoseconds" << std::endl;
+    duration_time 	    = std::chrono::duration_cast<std::chrono::milliseconds>(stop_timer - start_timer);
+    std::cout << "elapsed time vetorization : " << duration_time.count() << " [ms] " << std::endl;
 
     start_timer         = std::chrono::high_resolution_clock::now();
         //------------------------------------ for-loop
@@ -287,8 +290,8 @@ int main () {
         //------------------------------------ for-loop ^^^^^^^^^^^^^^^^^^^^^^^
 
     stop_timer 	        = std::chrono::high_resolution_clock::now();
-    duration_time 	    = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_timer - start_timer);
-    std::cout << "elapsed time for-loop : " << duration_time.count() << " nanoseconds" << std::endl;
+    duration_time 	    = std::chrono::duration_cast<std::chrono::milliseconds>(stop_timer - start_timer);
+    std::cout << "elapsed time for-loop : " << duration_time.count() << " [ms] " << std::endl;
 
         // check uvaOuts
         // cout << "uvaOuts" << endl;
@@ -307,19 +310,21 @@ int main () {
         //     cout << endl;
 		// }
 
-        cout << "uvaOuts - uvaOuts_forLoop" << endl;
+        cout << "uvaOuts - uvaOuts_forLoop :: comparing result " << endl;
         bool    different   = false;
         int     difCount    = 0;
+        float   tol         = 1e-4;
 		for (int j = 0; j < uvaOuts.size(); j++ ){
             for (int k = 0; k < 3; k++ ){
-                if (abs(uvaOuts[j][k] - uvaOuts_forLoop[j][k]) > 1e-9f) {
+                if (abs(uvaOuts[j][k] - uvaOuts_forLoop[j][k]) > tol) {
                     different = true;
                 }
                 
             }
 
             if (different) {
-                cout << "aie aie aie aie aie aie aie aie aie aie aie aie";
+                ++difCount;
+                cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
                 cout << "j " << j << endl;
                 cout << "uvaOuts         " << uvaOuts[j][0] << " " << uvaOuts[j][1] << " " <<uvaOuts[j][2] << " " <<endl;
                 cout << "uvaOuts_forLoop " << uvaOuts_forLoop[j][0] << " " << uvaOuts_forLoop[j][1] << " " << uvaOuts_forLoop[j][2] << " " << endl;
@@ -327,9 +332,13 @@ int main () {
 
             different = false;
             // cout << endl;
-		}        
-
-
+		}
+        if (difCount == 0) {
+            cout << "PASSED!        no different at tolerance " << tol << endl;
+        } else {
+            cout << "NOT passed!!!  different at tolerance " << tol << endl;
+            cout << difCount << endl;
+        }
 
     return 0;
 };
