@@ -14,9 +14,9 @@
 #include <cmath>        // for abs()
 
 // integrated by ThanhPhan and debugged
-// 18 aug 2022
-// optimize mask by .select() function
-// prevent crash with 1/0 at lenvec2D/lenvec3D
+// 17 aug 2022
+// optimized eig_vectT
+// BUG : !! Eigen::MatrixXf::Constant(1, playGroundVerticesSize, 0.0) .. "not 2, playGroundVerticesSize"
 
 using namespace std;
 using Eigen::MatrixXf;
@@ -87,7 +87,7 @@ int main () {
             //     cout << "x*1.0 != x if x is float";
             // }
 
-            // // .inverse() of zero, singularity showcase >> nan
+            // // .inverse() of zero, singularity showcase
             // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> zeroMat;
             // zeroMat         = Eigen::MatrixXf::Constant(1, 10, 0.0).array();
             // zeroMat         = zeroMat*zeroMat.inverse() + 1.0;
@@ -95,61 +95,6 @@ int main () {
             //     cout << zeroMat(0,ij);
             // }
             // cout << endl;
-
-            // conditional selection with Eigen
-            Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> zeroMat;
-            zeroMat         = Eigen::MatrixXf::Zero(1, 10).array();
-            zeroMat(0, 1)   = 5.0;
-
-            Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> inverseMat;
-            inverseMat      = zeroMat.inverse();
-
-            Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> maskMat;
-            // maskMat         = !(inverseMat.isFinite()); // is inf
-            maskMat         = !(Eigen::isfinite(inverseMat)); // is inf
-                    // isinf(), isnan(), ..
-
-            Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> constMat;
-            constMat         = Eigen::MatrixXf::Constant(1, 10, 0.0).array();
-
-            Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> inverseMatFixed;
-            //template argument
-            // inverseMatFixed  = Eigen::Select<Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> , Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(maskMat, constMat, inverseMat);
-            inverseMatFixed  = maskMat.select(constMat, inverseMat);
-
-            cout << "zeroMat" << endl;
-            for (int ij{0}; ij < 10; ++ij) {
-                cout << zeroMat(0,ij) << " ";
-            }
-            cout << endl;
-
-            cout << "inverseMat" << endl;
-            for (int ij{0}; ij < 10; ++ij) {
-                cout << inverseMat(0,ij) << " ";
-            }
-            cout << endl;
-
-            cout << "maskMat" << endl;
-            for (int ij{0}; ij < 10; ++ij) {
-                cout << maskMat(0,ij) << " ";
-            }
-            cout << endl;           
-
-            cout << "constMat" << endl;
-            for (int ij{0}; ij < 10; ++ij) {
-                cout << constMat(0,ij) << " ";
-            }
-            cout << endl;    
-
-            cout << "inverseMatFixed" << endl;
-            for (int ij{0}; ij < 10; ++ij) {
-                cout << inverseMatFixed(0,ij) << " ";
-            }
-            cout << endl;                                         
-
-            // fixing nan
-            // >> use mask array then select()
-
 
     //---------------------------------------------
     auto start_timer        = std::chrono::high_resolution_clock::now();
