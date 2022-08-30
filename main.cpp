@@ -29,10 +29,10 @@ void        printEigen2D(const Eigen::MatrixXf &eigenMat);
 
 //history : redo the GLM processing
 struct camIFs_strct {
-    vector<float> matrixD       = {1,1,0,0};
-    vector<float> matrixK       = {1,1,1,1};
+    vector<float> matrixD       = {1.0,1.0,0.0,0.0};
+    vector<float> matrixK       = {1.0,1.0,1.0,1.0};
     vector<float> matrixR       = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9};
-    vector<float> vectT         = {1,2,3};
+    vector<float> vectT         = {1.0,2.0,3.0};
 };
 
 int main () {
@@ -188,10 +188,10 @@ int main () {
         Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_lenVec2D, eig_lenVec3D;
 		Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_vecPointTransformed_p2;
             eig_vecPointTransformed_p2      = eig_vecPointTransformed.square();
-            // eig_lenVec2D 				    = eig_vecPointTransformed_p2.topRows(2).colwise().sum().sqrt();
+            eig_lenVec2D 				    = eig_vecPointTransformed_p2.topRows(2).colwise().sum().sqrt();
 
-            eig_lenVec2D = eig_vecPointTransformed.row(0).square(); //*eig_vecPointTransformed.row(0);
-            eig_lenVec2D += eig_vecPointTransformed.row(1).square(); //*eig_vecPointTransformed.row(1);
+            // eig_lenVec2D = eig_vecPointTransformed.row(0).square(); //*eig_vecPointTransformed.row(0);
+            // eig_lenVec2D += eig_vecPointTransformed.row(1).square(); //*eig_vecPointTransformed.row(1);
             // eig_lenVec2D = eig_lenVec2D.sqrt();
 
 
@@ -226,13 +226,13 @@ int main () {
             eig_theta_p2 	= eig_theta.square();
 
             // ********************************************
-            // eig_theta_p4 	= eig_theta_p2.square();
-            // eig_theta_p6 	= eig_theta_p2.cube();
-            // eig_theta_p8 	= eig_theta_p4.square();
+            eig_theta_p4 	= eig_theta_p2.square();
+            eig_theta_p6 	= eig_theta_p2.cube();
+            eig_theta_p8 	= eig_theta_p4.square();
             // ********************************************
-            eig_theta_p4 	= eig_theta_p2*eig_theta_p2;
-            eig_theta_p6 	= eig_theta_p2*eig_theta_p2*eig_theta_p2;
-            eig_theta_p8 	= eig_theta_p2*eig_theta_p2*eig_theta_p2*eig_theta_p2;         
+            // eig_theta_p4 	= eig_theta_p2*eig_theta_p2;
+            // eig_theta_p6 	= eig_theta_p2*eig_theta_p2*eig_theta_p2;
+            // eig_theta_p8 	= eig_theta_p2*eig_theta_p2*eig_theta_p2*eig_theta_p2;         
 
             eig_cdist 		= eig_theta*(1.0 + 
                                         camIFs[i].matrixD[0] * eig_theta_p2 + 
@@ -353,9 +353,8 @@ int main () {
             float lenVec3D = sqrt(
                 vecPointTransformed[0] * vecPointTransformed[0] + vecPointTransformed[1] * vecPointTransformed[1] +
                 vecPointTransformed[2] * vecPointTransformed[2]);
-            // float lenVec2D = sqrt(
-            //     vecPointTransformed[0] * vecPointTransformed[0] + vecPointTransformed[1] * vecPointTransformed[1]);
-            float lenVec2D = vecPointTransformed[0] * vecPointTransformed[0] + vecPointTransformed[1] * vecPointTransformed[1];
+            float lenVec2D = sqrt(
+                vecPointTransformed[0] * vecPointTransformed[0] + vecPointTransformed[1] * vecPointTransformed[1]);
 
             float temp_a = 0;
             float temp_b = 0;
@@ -366,7 +365,6 @@ int main () {
             float temp_cdist = 0;
             float temp_theta = 0;
             float temp_thetaSq = 0;
-
 
 
             if (vecPointTransformed[2] > ImageOffset[i]){
@@ -383,12 +381,9 @@ int main () {
                                         camIFs[i].matrixD[2] * thetaSq * thetaSq * thetaSq +
                                         camIFs[i].matrixD[3] * thetaSq * thetaSq * thetaSq * thetaSq);
 
-
                     temp_cdist = cdist;
                     temp_theta = theta;
                     temp_thetaSq = thetaSq;
-
-
 
                     xd = vecPointTransformed[0] / lenVec2D * cdist;
                     yd = vecPointTransformed[1] / lenVec2D * cdist;
@@ -410,15 +405,11 @@ int main () {
                     UVA = glm::vec3(-1.0, -1.0, 0.0);	
                 }
 
-
-
                 temp_a = vecPoint2D[0];
                 temp_b = vecPoint2D[1];
 
                 temp_c = xd;
-                temp_d = yd;        
-                
-                
+                temp_d = yd;
 
             }
             uvaOuts_forLoop.push_back(UVA);
@@ -503,10 +494,10 @@ int main () {
 
             if (different) {
                 ++difCount;
-                cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
-                cout << "j " << j << endl;
-                cout << "uvaOuts         " << uvaOuts[j][0] << " " << uvaOuts[j][1] << " " <<uvaOuts[j][2] << " " <<endl;
-                cout << "uvaOuts_forLoop " << uvaOuts_forLoop[j][0] << " " << uvaOuts_forLoop[j][1] << " " << uvaOuts_forLoop[j][2] << " " << endl;
+                // cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
+                // cout << "j " << j << endl;
+                // cout << "uvaOuts         " << uvaOuts[j][0] << " " << uvaOuts[j][1] << " " <<uvaOuts[j][2] << " " <<endl;
+                // cout << "uvaOuts_forLoop " << uvaOuts_forLoop[j][0] << " " << uvaOuts_forLoop[j][1] << " " << uvaOuts_forLoop[j][2] << " " << endl;
             }
 
             different = false;
@@ -524,7 +515,7 @@ int main () {
         cout << "eig_lenVec2D - lenVec2D_forLoop :: comparing result " << endl;
             different   = false;
             difCount    = 0;
-            tol         = 1e-7;
+            tol         = 1e-4;
 
 		for (int j = 0; j < uvaOuts.size(); j++ ){
  
@@ -535,10 +526,10 @@ int main () {
 
             if (different) {
                 ++difCount;
-                cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
-                cout << "j " << j << endl;
-                cout << "eig_lenVec2D         " << eig_lenVec2D(0, j) << " " <<endl;
-                cout << "lenVec2D_forLoop     " << lenVec2D_forLoop[j] << " " << endl;
+                // cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
+                // cout << "j " << j << endl;
+                // cout << "eig_lenVec2D         " << eig_lenVec2D(0, j) << " " <<endl;
+                // cout << "lenVec2D_forLoop     " << lenVec2D_forLoop[j] << " " << endl;
             }
 
             different = false;
@@ -570,10 +561,10 @@ int main () {
 
             if (different) {
                 ++difCount;
-                cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
-                cout << "j " << j << endl;
-                cout << "eig_vecPointTransformed         " << eig_vecPointTransformed(0, j) << " " << eig_vecPointTransformed(1, j) << " " << eig_vecPointTransformed(2, j) << " " <<endl;
-                cout << "vecPointTransformed_forLoop " << vecPointTransformed_forLoop[j][0] << " " << vecPointTransformed_forLoop[j][1] << " " << vecPointTransformed_forLoop[j][2] << " " << endl;
+                // cout << "aie aie aie aie aie aie aie aie aie aie aie aie" << endl;
+                // cout << "j " << j << endl;
+                // cout << "eig_vecPointTransformed         " << eig_vecPointTransformed(0, j) << " " << eig_vecPointTransformed(1, j) << " " << eig_vecPointTransformed(2, j) << " " <<endl;
+                // cout << "vecPointTransformed_forLoop " << vecPointTransformed_forLoop[j][0] << " " << vecPointTransformed_forLoop[j][1] << " " << vecPointTransformed_forLoop[j][2] << " " << endl;
             }
 
             different = false;
