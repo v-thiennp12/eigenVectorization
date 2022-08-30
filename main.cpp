@@ -161,7 +161,7 @@ int main () {
 
     start_timer             = std::chrono::high_resolution_clock::now();
 
-    //** playGroundVertices[i] new 29 aug 2022
+	//** playGroundVertices[i] new 29 aug 2022
     //** playGroundVertices iteration----------------vectorization---------------------------	
 	 	Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_playGroundVertices;
         Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_matrixR;
@@ -189,30 +189,13 @@ int main () {
 		Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_vecPointTransformed_p2;
             eig_vecPointTransformed_p2      = eig_vecPointTransformed.square();
             eig_lenVec2D 				    = eig_vecPointTransformed_p2.topRows(2).colwise().sum().sqrt();
-
-            // eig_lenVec2D = eig_vecPointTransformed.row(0).square(); //*eig_vecPointTransformed.row(0);
-            // eig_lenVec2D += eig_vecPointTransformed.row(1).square(); //*eig_vecPointTransformed.row(1);
-            // eig_lenVec2D = eig_lenVec2D.sqrt();
-
-
             eig_lenVec3D 					= eig_vecPointTransformed_p2.topRows(3).colwise().sum().sqrt();
 
 		// // // xd, yd
-        // masking : if (vecPointTransformed[2] > ImageOffset[i])
-        // masking : if (lenVec2D > 1e-6f)        
-
-        // ****
-        // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPointTransformed;
-        // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_maskNOT_vecPointTransformed;
-        // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_lenVec2D;
-
+			// masking : if (vecPointTransformed[2] > ImageOffset[i])
+			// masking : if (lenVec2D > 1e-6f)        
         Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPointTransformed;
         Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_lenVec2D;
-            //***
-            // eig_mask_vecPointTransformed	= (eig_vecPointTransformed.row(2) > ImageOffset[i]).cast<float>();            
-            // eig_maskNOT_vecPointTransformed	= (!(eig_vecPointTransformed.row(2) > ImageOffset[i])).cast<float>();
-            // eig_mask_lenVec2D				= (eig_lenVec2D > 1e-6f).cast<float>();
-
             eig_mask_vecPointTransformed	= (eig_vecPointTransformed.row(2) > ImageOffset[i]);
             eig_mask_lenVec2D				= (eig_lenVec2D > 1e-6f);
 	
@@ -224,15 +207,9 @@ int main () {
             eig_ratio 		= eig_lenVec2D*eig_lenVec3D.inverse();
             eig_theta 		= eig_ratio.asin();
             eig_theta_p2 	= eig_theta.square();
-
-            // ********************************************
             eig_theta_p4 	= eig_theta_p2.square();
             eig_theta_p6 	= eig_theta_p2.cube();
             eig_theta_p8 	= eig_theta_p4.square();
-            // ********************************************
-            // eig_theta_p4 	= eig_theta_p2*eig_theta_p2;
-            // eig_theta_p6 	= eig_theta_p2*eig_theta_p2*eig_theta_p2;
-            // eig_theta_p8 	= eig_theta_p2*eig_theta_p2*eig_theta_p2*eig_theta_p2;         
 
             eig_cdist 		= eig_theta*(1.0 + 
                                         camIFs[i].matrixD[0] * eig_theta_p2 + 
@@ -243,49 +220,24 @@ int main () {
             eig_xd          = (eig_vecPointTransformed.row(0).array()*eig_lenVec2D.inverse())*eig_cdist;
             eig_yd          = (eig_vecPointTransformed.row(1).array()*eig_lenVec2D.inverse())*eig_cdist;
 
-    //         // printEigen2D(eig_xd);
-    //         // printEigen2D(eig_yd);
-
-	// 	// // // vecPoint2D
+		// 	// // // vecPoint2D
         Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_vecPoint2D;
-            eig_vecPoint2D        = Eigen::MatrixXf::Constant(2, playGroundVerticesSize, 0.0).array();
-
-            // // ***
-            // eig_vecPoint2D.row(0)   = (camIFs[i].matrixK[0] * eig_xd * eig_mask_lenVec2D) + camIFs[i].matrixK[1];
-            // eig_vecPoint2D.row(1)   = (camIFs[i].matrixK[2] * eig_yd * eig_mask_lenVec2D) + camIFs[i].matrixK[3];
+            eig_vecPoint2D        	= Eigen::MatrixXf::Constant(2, playGroundVerticesSize, 0.0).array();
 
             eig_vecPoint2D.row(0)   = eig_mask_lenVec2D.select((camIFs[i].matrixK[0] * eig_xd) + camIFs[i].matrixK[1], camIFs[i].matrixK[1]);
             eig_vecPoint2D.row(1)   = eig_mask_lenVec2D.select((camIFs[i].matrixK[2] * eig_yd) + camIFs[i].matrixK[3] , camIFs[i].matrixK[3]);
 
-            // ***************
-            //masking : if ((vecPoint2D[1] >= 0.0 && vecPoint2D[1] <= PLAYGROUND_TEXTURE_HEIGHT) && (vecPoint2D[0] >= 0.0 && vecPoint2D[0] <= PLAYGROUND_TEXTURE_WIDTH))
-            // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPoint2D, eig_maskNOT_vecPoint2D;
-            // eig_mask_vecPoint2D     = (((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH))).cast<float>();
-            // eig_maskNOT_vecPoint2D  = (!(((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH)))).cast<float>();
-
-            // ***************
-            Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPoint2D;
+			// ***************
+			//masking : if ((vecPoint2D[1] >= 0.0 && vecPoint2D[1] <= PLAYGROUND_TEXTURE_HEIGHT) && (vecPoint2D[0] >= 0.0 && vecPoint2D[0] <= PLAYGROUND_TEXTURE_WIDTH))
+			Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPoint2D;
             eig_mask_vecPoint2D     = (((eig_vecPoint2D.row(1) >= 0.0) && (eig_vecPoint2D.row(1) <= PLAYGROUND_TEXTURE_HEIGHT)) && ((eig_vecPoint2D.row(0) >= 0.0) && (eig_vecPoint2D.row(0) <= PLAYGROUND_TEXTURE_WIDTH)));
-            // ***************
 
-            //masking : if (vecPointTransformed[2] > ImageOffset[i] + 0.1)
-
-            // // **********************
-            // Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPointTransformed_0p1;
-            // eig_mask_vecPointTransformed_0p1 = (eig_vecPointTransformed.array().row(2) > (ImageOffset[i] + 0.1)).cast<float>();
-            // // **********************
-            
+            //masking : if (vecPointTransformed[2] > ImageOffset[i] + 0.1)            
             Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> eig_mask_vecPointTransformed_offset0p1;
             eig_mask_vecPointTransformed_offset0p1 = (eig_vecPointTransformed.array().row(2) > (ImageOffset[i] + 0.1));
 
-    //             // printEigen2D(eig_vecPoint2D.matrix());
-    //             // printEigen2D(eig_mask_vecPoint2D.matrix());
-    //             // printEigen2D(eig_maskNOT_vecPoint2D.matrix());
-    //             // cout << "eig_mask_vecPointTransformed_0p1" << endl;
-    //             // printEigen2D(eig_mask_vecPointTransformed_0p1.matrix());
-
-	// 		//UVA
-	// 			// keep to 3xsize matrice
+		// 		//UVA
+		// 			// keep to 3xsize matrice
                 Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic> eig_rowOnes, eig_rowMinusOnes, eig_rowZeros;
                     eig_rowOnes         = Eigen::MatrixXf::Constant(1, playGroundVerticesSize, 1.0).array();
                     eig_rowMinusOnes    = Eigen::MatrixXf::Constant(1, playGroundVerticesSize, -1.0).array();
@@ -301,24 +253,8 @@ int main () {
                 
                 eig_UVA.row(0) 	= eig_mask_vecPointTransformed.select(eig_UVA.row(0), eig_rowMinusOnes);
                 eig_UVA.row(1) 	= eig_mask_vecPointTransformed.select(eig_UVA.row(1), eig_rowMinusOnes);
-                eig_UVA.row(2) 	= eig_mask_vecPointTransformed.select(eig_UVA.row(2), eig_rowZeros);                
-                // ****************
-
-
-				// eig_UVA.row(0) 	= (eig_vecPoint2D.row(0) / RAW_IMG_WIDTH)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
-				// eig_UVA.row(1) 	= (eig_vecPoint2D.row(1) / RAW_IMG_HEIGHT)*eig_mask_vecPoint2D + (-1.0*eig_maskNOT_vecPoint2D);
-				// eig_UVA.row(2) 	= (eig_mask_vecPointTransformed_0p1*1.0)*eig_mask_vecPoint2D;
+                eig_UVA.row(2) 	= eig_mask_vecPointTransformed.select(eig_UVA.row(2), eig_rowZeros);
 				
-                // cout << "eig_UVA" << endl;
-                // printEigen2D(eig_UVA.matrix());
-
-                // ***
-				// eig_UVA.row(0) 	= eig_UVA.row(0)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
-				// eig_UVA.row(1) 	= eig_UVA.row(1)*eig_mask_vecPointTransformed + (-1.0*eig_maskNOT_vecPointTransformed);
-				// eig_UVA.row(2) 	= eig_UVA.row(2)*eig_mask_vecPointTransformed;
-
-    //             // printEigen2D(eig_UVA.matrix());
-
 			// push_back to uvaOuts
 				for (int k = 0; k < playGroundVerticesSize; ++k ){
 					uvaOuts.push_back(glm::vec3(eig_UVA(0, k), eig_UVA(1, k), eig_UVA(2, k)));
@@ -327,7 +263,6 @@ int main () {
     // new 29 aug 2022
 	// 	//** playGroundVertices iteration----------------vectorization---------------------------
 	// 	//-----------vectorization ^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // //** playGroundVertices iteration----------------vectorization---------------------------
 
 
     stop_timer 	        = std::chrono::high_resolution_clock::now();
